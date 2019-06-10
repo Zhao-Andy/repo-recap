@@ -1,0 +1,11 @@
+# Temp files
+
+/log/*
+!/log/.keep
+/tmp
+.DS_Store
+.swp
+
+# Environment variables
+
+environment.rb
