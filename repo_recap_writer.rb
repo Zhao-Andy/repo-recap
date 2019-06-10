@@ -12,12 +12,12 @@ end_day = 3
 # start_of_week = Time.new(2019, 01, 20, 0, 0, 0, 0).utc
 # end_of_week = Time.new(2019, end_month, end_day, 11, 59, 59, 0).utc
 
-class MegaClass # please rename this
+class RepoRecap
   include SpecialUsernames
   attr_accessor :client, :year, :start_month, :end_month, :start_day, :end_day, :start_of_week, :end_of_week
 
   def initialize(options)
-    @client = Octokit::Client.new(access_token: ENV['GITHUB_ACCESS_TOKEN'])
+    @client = Octokit::Client.new(access_token: ENV["GITHUB_ACCESS_TOKEN"])
     @client.auto_paginate = true
     year = 2019
     start_month = options[:start_month]
@@ -33,12 +33,13 @@ class MegaClass # please rename this
     @issues = get_past_weeks_open_issues
     @ios_issues = get_ios_open_issues
     @android_issues = get_android_open_issues
+    @repository_link = ENV["REPOSITORY_LINK"]
   end
 
   def get_past_weeks_merged_pull_requests
     dependency_label_id = 1034632663
     # this takes a while because it loads all closed PRs
-    @client.pull_requests("thepracticaldev/dev.to", state: "closed").select do |pr|
+    @client.pull_requests(@repository_link, state: "closed").select do |pr|
       pr.merged_at&.between?(@start_of_week, @end_of_week) && !pr.labels.map(&:id).include?(dependency_label_id)
     end.sort_by { |pr| pr.merged_at }
   end
@@ -60,7 +61,7 @@ class MegaClass # please rename this
   end
 
   def get_past_weeks_open_issues
-    @client.issues("thepracticaldev/dev.to", state: "open").select do |issue|
+    @client.issues(@repository_link, state: "open").select do |issue|
       issue[:pull_request].nil? && issue.created_at.between?(@start_of_week, @end_of_week)
     end.sort_by {|issue| issue.created_at }
   end
@@ -77,20 +78,27 @@ class MegaClass # please rename this
     end.sort_by {|issue| issue.created_at }
   end
 
+  def front_matter_markdown
+    <<~HEREDOC
+      ---
+      title: #{ENV["COMPANY_NAME"]} Repo Recap from the Past Week
+      published: false
+      description: "A weekly post recapping what's happened in the #{ENV["COMPANY_NAME"]} repo."
+      cover_image: #{ENV["COVER_IMAGE_URL"]}
+      tags: #{ENV["TAGS"]}
+      ---
+
+    HEREDOC
+  end
+
   def final_markdown
     formatted_start_day = start_of_week.strftime("%B %e")
     formatted_end_day = end_of_week.strftime("%B %e")
 
     <<~HEREDOC
-      ---
-      title: dev.to Repo Recap from the Past Week
-      published: false
-      description: "A weekly post recapping what's happened in our repo."
-      cover_image: https://thepracticaldev.s3.amazonaws.com/i/hc0yatvqwjpg1p592lim.gif
-      tags: changelog, meta, opensource
-      ---
+      #{front_matter_markdown}
 
-      Welcome back to another Repo Recap, where we cover last week's contributions to [dev.to's repository](https://github.com/thepracticaldev/dev.to) [the iOS repo](https://github.com/thepracticaldev/dev-ios), and [the Android repo](https://github.com/thepracticaldev/dev-android). This edition is covering #{formatted_start_day} to #{formatted_end_day}.
+      Welcome back to another Repo Recap, where we cover last week's contributions to [#{ENV["COMPANY_NAME"]}'s repository](#{ENV["REPO_LINK"]}) [the iOS repo](https://github.com/thepracticaldev/dev-ios), and [the Android repo](https://github.com/thepracticaldev/dev-android). This edition is covering #{formatted_start_day} to #{formatted_end_day}.
 
       # Main Repo
       ## Features
@@ -275,7 +283,7 @@ class MegaClass # please rename this
   end
 end
 
-g = MegaClass.new(year: year, start_month: start_month, start_day: start_day, end_month: end_month, end_day: end_day)
+g = RepoRecap.new(year: year, start_month: start_month, start_day: start_day, end_month: end_month, end_day: end_day)
 
 fm = g.final_markdown
 tyc = g.thank_you_comment
