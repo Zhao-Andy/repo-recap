@@ -3,15 +3,6 @@ require "octokit"
 require "./environment"
 require "./special_usernames"
 
-year = 2019
-start_month = 4
-start_day = 27
-end_month = 5
-end_day = 3
-
-# start_of_week = Time.new(2019, 01, 20, 0, 0, 0, 0).utc
-# end_of_week = Time.new(2019, end_month, end_day, 11, 59, 59, 0).utc
-
 class RepoRecap
   include SpecialUsernames
   attr_accessor :client, :year, :start_month, :end_month, :start_day, :end_day, :start_of_week, :end_of_week
@@ -283,10 +274,16 @@ class RepoRecap
   end
 end
 
-g = RepoRecap.new(year: year, start_month: start_month, start_day: start_day, end_month: end_month, end_day: end_day)
+year = ENV["CURRENT_YEAR"].to_i
+start_month = ENV["START_MONTH"].to_i
+start_day = ENV["START_DAY"].to_i
+end_month = ENV["END_MONTH"].to_i
+end_day = ENV["END_DAY"].to_i
 
-fm = g.final_markdown
-tyc = g.thank_you_comment
-puts fm
+repo_recap = RepoRecap.new(year: year, start_month: start_month, start_day: start_day, end_month: end_month, end_day: end_day)
+
+final_markdown = repo_recap.final_markdown
+thank_you_comment = repo_recap.thank_you_comment
+puts final_markdown
 puts "----------------"
-puts tyc
+puts thank_you_comment
