@@ -17,6 +17,7 @@ class RepoRecap
     end_day = options[:end_day]
     @start_of_week = Time.new(year, start_month, start_day, 0, 0, 0, 0).utc
     @end_of_week = Time.new(year, end_month, end_day, 23, 59, 59, 0).utc
+    @repository_link = ENV["REPOSITORY_LINK"]
     @pull_requests = get_past_weeks_merged_pull_requests
     @ios_prs = get_past_weeks_ios_prs
     @android_prs = get_past_weeks_android_prs
@@ -24,7 +25,6 @@ class RepoRecap
     @issues = get_past_weeks_open_issues
     @ios_issues = get_ios_open_issues
     @android_issues = get_android_open_issues
-    @repository_link = ENV["REPOSITORY_LINK"]
   end
 
   def get_past_weeks_merged_pull_requests
